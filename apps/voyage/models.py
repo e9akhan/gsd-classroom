@@ -419,7 +419,7 @@ class Student(QuxModel):
         """
         String representation.
         """
-        return self.user.get_username()
+        return self.user.username
 
 
 class Assignment(QuxModel):
