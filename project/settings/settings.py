@@ -8,6 +8,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 Quick-start development settings - unsuitable for production
 See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 """
+
 import os
 from pathlib import Path
 
