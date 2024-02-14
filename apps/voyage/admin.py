@@ -55,7 +55,7 @@ class StudentAdmin(admin.ModelAdmin):
     Student Admin.
     """
 
-    list_display = ["user", "github", "is_active", "program", "no_of_assignments", "grade"]
+    list_display = ["user", "github", "is_active", "program", "no_of_assignments", "no_of_assignments_submitted", "grade"]
 
     def no_of_assignments(self, obj):
         """
@@ -68,6 +68,12 @@ class StudentAdmin(admin.ModelAdmin):
         Grade.
         """
         return obj.grade()
+    
+    def no_of_assignments_submitted(self, obj):
+        """
+            No of assignments submitted.
+        """
+        return obj.assignments_submitted()
 
 
 @admin.register(Content)

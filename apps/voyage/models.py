@@ -328,9 +328,9 @@ class Student(QuxModel):
         """
         query = self.studentassignment_set.all().exclude(submitted=None)
         if assignment:
-            return query.filter(assignment=assignment)
+            return query.filter(assignment=assignment).count()
 
-        return query
+        return query.count()
 
     def assignments_not_submitted(self, assignment=None):
         """
@@ -360,9 +360,9 @@ class Student(QuxModel):
         """
         grades = [assignment.grade for assignment in self.assignments_graded()]
 
-        total_assignment_submitted = len(self.assignments_submitted())
+        total_assignment_submitted = self.assignments_submitted()
         return (
-            sum(grades) / total_assignment_submitted
+            round(sum(grades) / total_assignment_submitted, 2)
             if total_assignment_submitted
             else 0
         )
