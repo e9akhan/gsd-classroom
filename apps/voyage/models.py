@@ -32,13 +32,13 @@ class Faculty(QuxModel):
         """
         assignments.
         """
-        return sum(content.courses() for content in self.content_set.all())
+        return sum(content.assignments() for content in self.content_set.all())
 
     def courses(self):
         """
         courses.
         """
-        return sum(content.assignments() for content in self.content_set.all())
+        return sum(content.courses() for content in self.content_set.all())
 
     def content(self, program=None, course=None):
         """
