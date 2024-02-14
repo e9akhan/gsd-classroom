@@ -320,7 +320,7 @@ class Student(QuxModel):
         """
         No of assignments.
         """
-        return self.studentassignment_set.all()
+        return self.studentassignment_set.all().count()
 
     def assignments_submitted(self, assignment=None):
         """
