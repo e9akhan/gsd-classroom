@@ -148,7 +148,7 @@ class Program(QuxModel):
         """
         List of students in the program
         """
-        return len(self.student_set.all())
+        return self.student_set.all().count()
 
     def courses(self):
         """
