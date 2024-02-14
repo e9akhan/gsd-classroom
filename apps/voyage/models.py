@@ -437,8 +437,8 @@ class Assignment(QuxModel):
     def students(self):
         """
         Students.
-        """
-        return Student.objects.filter(program__assignment=self)
+        """ 
+        return Student.objects.filter(program__assignment=self).distinct()
 
     def submissions(self, graded=None):
         """
