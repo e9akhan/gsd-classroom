@@ -23,56 +23,46 @@ class Faculty(QuxModel):
         """
         program().
         """
-        students = [
-            stu_assign.student for stu_assign in self.studentassignment_set.all()
-        ]
-        return {student.program for student in students}
+        return Program.objects.filter(assignment__content__faculty=self).distinct()
 
     def assignments(self):
         """
         assignments.
         """
-        return sum(content.assignments() for content in self.content_set.all())
+        return Assignment.objects.filter(content__faculty=self)
 
     def courses(self):
         """
         courses.
         """
-        return sum(content.courses() for content in self.content_set.all())
+        return Course.objects.filter(assignment__content__faculty=self).distinct()
 
     def content(self, program=None, course=None):
         """
         Content.
         """
-
-        if program and course:
-            program_id, course_id = (
-                Program.objects.filter(name=program)[0],
-                Course.objects.filter(name=course)[0],
-            )
-            return [
-                content
-                for content in self.content_set.all()
-                if content.assignment_set.all().filter(
-                    program=program_id, course=course_id
-                )
-            ]
-
         if program:
             program_id = Program.objects.filter(name=program)[0]
-            return [
-                content
-                for content in self.content_set.all()
-                if content.assignment_set.all().filter(program=program_id)
-            ]
 
         if course:
             course_id = Course.objects.filter(name=course)[0]
-            return [
-                content
-                for content in self.content_set.all()
-                if content.assignment_set.all().filter(course=course_id)
-            ]
+
+        if program and course:
+            return Content.objects.filter(
+                assignment__program=program_id,
+                assignment__course=course_id,
+                faculty=self,
+            ).distinct()
+
+        if program:
+            return Content.objects.filter(
+                assignment__program=program_id, faculty=self
+            ).distinct()
+
+        if course:
+            return Content.objects.filter(
+                assignment__course=course_id, faculty=self
+            ).distinct()
 
         return self.content_set.all()
 
@@ -80,11 +70,14 @@ class Faculty(QuxModel):
         """
         Assignment graded.
         """
-        query = self.studentassignment_set.all().exclude(grade=None)
+        assignments = StudentAssignment.objects.exclude(grade=None).filter(
+            reviewer=self
+        )
 
         if assignment:
-            return query.filter(assignment=assignment).count()
-        return query.count()
+            return assignments.filter(id=assignment)
+
+        return assignments
 
     @classmethod
     def create_random_faculty(cls):
@@ -148,13 +141,13 @@ class Program(QuxModel):
         """
         List of students in the program
         """
-        return self.student_set.all().count()
+        return self.student_set.all()
 
     def courses(self):
         """
         No of courses.
         """
-        return len({assignment.course for assignment in self.assignment_set.all()})
+        return Course.objects.filter(assignment__program=self).distinct()
 
     @classmethod
     def create_random_programs(cls):
@@ -192,41 +185,35 @@ class Course(QuxModel):
         """
         Program.
         """
-        return {assignment.program for assignment in self.assignment_set.all()}
+        return Program.objects.filter(assignment__course=self).distinct()
 
     def students(self):
         """
         Students.
         """
-        students = []
-
-        for assignment in self.assignment_set.all():
-            students += assignment.students()
-        return set(students)
+        return Student.objects.filter(program__assignment__course=self).distinct()
 
     def content(self):
         """
         Contents.
         """
-        return {assignment.content for assignment in self.assignment_set.all()}
+        return Content.objects.filter(assignment__course=self).distinct()
 
     def assignments(self):
         """
         No of assignments.
         """
-        return self.assignment_set.all().count()
+        return self.assignment_set.all()
 
     def assignment_completed_and_graded_100(self):
         """
         No of assignments completed and graded 100%.
         """
-        return len(
-            [
-                assignment
-                for assignment in self.assignment_set.all()
-                if assignment.is_assignment_submitted_graded_100()
-            ]
-        )
+        return [
+            assignment
+            for assignment in self.assignment_set.all()
+            if assignment.is_assignment_submitted_graded_100()
+        ]
 
     @classmethod
     def create_random_courses(cls):
@@ -248,7 +235,7 @@ class Content(QuxModel):
     faculty = models.ForeignKey(Faculty, on_delete=models.DO_NOTHING)
     repo = models.URLField(max_length=240, unique=True)
 
-    class _Meta:
+    class Meta:
         """
         Meta class.
         """
@@ -260,13 +247,13 @@ class Content(QuxModel):
         """
         No of courses.
         """
-        return len({assignment.course for assignment in self.assignment_set.all()})
+        return Course.objects.filter(assignment__content=self).distinct()
 
     def assignments(self):
         """
         No of assignments.
         """
-        return self.assignment_set.all().count()
+        return self.assignment_set.all()
 
     @classmethod
     def create_random_contents(cls):
@@ -308,19 +295,19 @@ class Student(QuxModel):
         """
         Programs.
         """
-        return self.program.name
+        return self.program
 
     def courses(self):
         """
         Number of courses.
         """
-        return self.program.courses()
+        return Course.objects.filter(assignment__program__student=self).distinct()
 
     def assignments(self):
         """
         No of assignments.
         """
-        return self.studentassignment_set.all().count()
+        return self.studentassignment_set.all()
 
     def assignments_submitted(self, assignment=None):
         """
@@ -328,9 +315,9 @@ class Student(QuxModel):
         """
         query = self.studentassignment_set.all().exclude(submitted=None)
         if assignment:
-            return query.filter(assignment=assignment).count()
+            return query.filter(assignment=assignment)
 
-        return query.count()
+        return query
 
     def assignments_not_submitted(self, assignment=None):
         """
@@ -360,7 +347,7 @@ class Student(QuxModel):
         """
         grades = [assignment.grade for assignment in self.assignments_graded()]
 
-        total_assignment_submitted = self.assignments_submitted()
+        total_assignment_submitted = self.assignments_submitted().count()
         return (
             round(sum(grades) / total_assignment_submitted, 2)
             if total_assignment_submitted
@@ -451,7 +438,7 @@ class Assignment(QuxModel):
         """
         Students.
         """
-        return {stu_assign.student for stu_assign in self.studentassignment_set.all()}
+        return Student.objects.filter(program__assignment=self)
 
     def submissions(self, graded=None):
         """
@@ -475,6 +462,14 @@ class Assignment(QuxModel):
             self.studentassignment_set.all().exclude(submitted=None).exclude(grade=None)
         )
         return total_assignments == query.count()
+
+    def assignment_avg_grade(self):
+        """
+        Average assignment grade.
+        """
+        stu_assignments = self.studentassignment_set.all().exclude(grade=None)
+        marks = stu_assignments.aggregate(models.Avg("grade"))["grade__avg"]
+        return round(marks, 2) if marks else 0
 
     @classmethod
     def create_random_assignments(cls):

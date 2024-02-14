@@ -3,6 +3,8 @@
 """
 
 from django.contrib import admin
+from django.utils.html import format_html
+from django.urls import reverse
 
 from .models import (
     Faculty,
@@ -23,7 +25,6 @@ class FacultyAdmin(admin.ModelAdmin):
 
     list_display = [
         "user",
-        "github",
         "courses",
         "assignments",
         "assignments_graded",
@@ -34,19 +35,61 @@ class FacultyAdmin(admin.ModelAdmin):
         """
         Assignments.
         """
-        return obj.assignments()
+        url = "admin:voyage_assignment_change"
+        assignments = obj.assignments()
+        dropdown = "<ul>"
 
-    def assigments_graded(self, obj):
+        for assignment in assignments:
+            dropdown += f"""
+            <li>
+                <a href={reverse(url, kwargs={'object_id': assignment.id})}>
+                    {assignment}
+                </a>
+            </li>
+        """
+
+        dropdown += "</ul>"
+        return format_html(dropdown)
+
+    def assignments_graded(self, obj):
         """
         Assignments graded.
         """
-        return obj.assignments_graded()
+        url = "admin:voyage_studentassignment_change"
+        assignments = obj.assignments_graded()
+        dropdown = "<ul>"
+
+        for assignment in assignments:
+            dropdown += f"""
+            <li>
+                <a href={reverse(url, kwargs={'object_id': assignment.id})}>
+                    {assignment}
+                </a>
+            </li>
+        """
+
+        dropdown += "</ul>"
+        return format_html(dropdown)
 
     def courses(self, obj):
         """
         Courses.
         """
-        return obj.courses()
+        url = "admin:voyage_course_change"
+        courses = obj.courses()
+        dropdown = "<ul>"
+
+        for course in courses:
+            dropdown += f"""
+            <li>
+                <a href={reverse(url, kwargs={'object_id': course.id})}>
+                    {course}
+                </a>
+            </li>
+        """
+
+        dropdown += "</ul>"
+        return format_html(dropdown)
 
 
 @admin.register(Student)
@@ -57,19 +100,66 @@ class StudentAdmin(admin.ModelAdmin):
 
     list_display = [
         "user",
-        "github",
-        "is_active",
-        "program",
-        "no_of_assignments",
-        "no_of_assignments_submitted",
+        "programs",
+        "courses",
+        "assignments",
+        "assignments_submitted",
         "grade",
     ]
 
-    def no_of_assignments(self, obj):
+    def programs(self, obj):
         """
-        No of assignments.
+        Programs
         """
-        return obj.assignments()
+        url = "admin:voyage_program_change"
+        program = obj.programs()
+        return format_html(
+            f"""
+                <a href={reverse(url, kwargs={'object_id': program.id})}>
+                    {program.name} 
+                </a>
+            """
+        )
+
+    def courses(self, obj):
+        """
+        Courses.
+        """
+        url = "admin:voyage_course_change"
+        courses = obj.courses()
+
+        dropdown = "<ul>"
+        for course in courses:
+            dropdown += f"""
+            <li>
+                <a href={reverse(url, kwargs={"object_id": course.id})}>
+                    {course}
+                </a>
+            </li>
+        """
+        dropdown += "</ul>"
+
+        return format_html(dropdown)
+
+    def assignments(self, obj):
+        """
+        assignments.
+        """
+        url = "admin:voyage_studentassignment_change"
+        assignments = obj.assignments()
+
+        dropdown = "<ul>"
+        for assignment in assignments:
+            dropdown += f"""
+            <li>
+                <a href={reverse(url, kwargs={'object_id': assignment.id})}>
+                    {assignment}
+                </a>
+            </li>
+            """
+        dropdown += "</ul>"
+
+        return format_html(dropdown)
 
     def grade(self, obj):
         """
@@ -77,11 +167,25 @@ class StudentAdmin(admin.ModelAdmin):
         """
         return obj.grade()
 
-    def no_of_assignments_submitted(self, obj):
+    def assignments_submitted(self, obj):
         """
         No of assignments submitted.
         """
-        return obj.assignments_submitted()
+        url = "admin:voyage_studentassignment_change"
+        assignments = obj.assignments_submitted()
+
+        dropdown = "<ul>"
+        for assignment in assignments:
+            dropdown += f"""
+            <li>
+                <a href={reverse(url, kwargs={"object_id": assignment.id})}>
+                    {assignment}
+                </a>
+            </li>
+        """
+        dropdown += "</ul>"
+
+        return format_html(dropdown)
 
 
 @admin.register(Content)
@@ -90,19 +194,19 @@ class ContentAdmin(admin.ModelAdmin):
     Content Admin class.
     """
 
-    list_display = ["name", "faculty", "repo", "assignments", "no_of_courses"]
+    list_display = ["name", "faculty", "repo", "no_of_courses", "assignments"]
 
     def assignments(self, obj):
         """
         Assignments.
         """
-        return obj.assignments()
+        return obj.assignments().count()
 
     def no_of_courses(self, obj):
         """
         No of courses.
         """
-        return obj.courses()
+        return obj.courses().count()
 
 
 @admin.register(Program)
@@ -117,13 +221,13 @@ class ProgramAdmin(admin.ModelAdmin):
         """
         No of courses.
         """
-        return obj.courses()
+        return obj.courses().count()
 
     def no_of_students(self, obj):
         """
         No of students.
         """
-        return obj.students()
+        return obj.students().count()
 
 
 @admin.register(Course)
@@ -138,13 +242,13 @@ class CourseAdmin(admin.ModelAdmin):
         """
         Assignment.
         """
-        return obj.assignments()
+        return obj.assignments().count()
 
     def assignment_full_checked(self, obj):
         """
         All assignment checked.
         """
-        return obj.assignment_completed_and_graded_100()
+        return len(obj.assignment_completed_and_graded_100())
 
 
 @admin.register(Assignment)
@@ -153,13 +257,13 @@ class AssignmentAdmin(admin.ModelAdmin):
     Assignment Admin class.
     """
 
-    list_display = ["program", "course", "content", "due"]
+    list_display = ["program", "course", "content", "due", "average"]
 
-    def student(self, obj):
+    def average(self, obj):
         """
-        Student.
+        Average.
         """
-        return obj.students()
+        return obj.assignment_avg_grade()
 
 
 @admin.register(StudentAssignment)
