@@ -4,7 +4,8 @@
 
 import random
 from datetime import datetime, timedelta
-import git
+
+# import git
 
 from django.contrib.auth import get_user_model
 from django.db import models
