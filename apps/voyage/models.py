@@ -479,18 +479,27 @@ class Assignment(QuxModel):
         return round(marks, 2) if marks else 0
 
     def clone_repo_for_student(self, course_repo_url, student_username):
+        """
+        Clone repo and create repo for each student.
+        """
         repo = git.Repo.clone_from(
-            course_repo_url, f"https://github.com/{student_username}/{self.content.name}"
+            course_repo_url,
+            f"https://github.com/{student_username}/{self.content.name}",
         )
         return repo
 
-    def save(self, **kwargs):
+    def save(
+        self, force_insert=False, force_update=False, using=None, update_fields=None
+    ):
+        """
+        Save method
+        """
         students = Student.objects.all()
 
         for student in students:
             self.clone_repo_for_student(self.content.repo, student.user.username)
 
-        return super().save(**kwargs)
+        return super().save(force_insert, force_update, using, update_fields)
 
     @classmethod
     def create_random_assignments(cls):
