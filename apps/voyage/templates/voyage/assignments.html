@@ -1,0 +1,15 @@
+{% extends 'voyage/student_dashboard.html' %}
+
+{% block header %}
+
+<strong style="width: 25%">Assignment Name</strong>
+<span class="text-end">Avg Grade</span>
+
+{% endblock %}
+
+{% block list %}
+
+<strong style="width: 25%">{{object}}</strong>
+<span class="text-end">{{object.assignment_avg_grade}}</span>
+
+{% endblock %}

@@ -58,7 +58,7 @@ class FacultyAdmin(admin.ModelAdmin):
         """
         Courses.
         """
-        courses = obj.courses()
+        courses = obj.courses
 
         if courses:
             html = '<a href="/admin/voyage/course/?id__in='
@@ -97,7 +97,7 @@ class StudentAdmin(admin.ModelAdmin):
         """
         Courses.
         """
-        courses = obj.courses()
+        courses = obj.courses
         if courses:
             html = '<a href="/admin/voyage/course/?id__in='
             for course in courses:
@@ -109,7 +109,7 @@ class StudentAdmin(admin.ModelAdmin):
         """
         assignments.
         """
-        assignments = obj.assignments()
+        assignments = obj.assignments
         if assignments:
             html = '<a href="/admin/voyage/studentassignment/?id__in='
             for assignment in assignments:
@@ -222,7 +222,7 @@ class CourseAdmin(admin.ModelAdmin):
         """
         Assignment.
         """
-        assignments = obj.assignments()
+        assignments = obj.assignments
         if assignments:
             html = '<a href="/admin/voyage/assignment/?id__in='
             for assignment in assignments:
@@ -255,7 +255,7 @@ class AssignmentAdmin(admin.ModelAdmin):
         """
         Average.
         """
-        return obj.assignment_avg_grade()
+        return obj.assignment_avg_grade
 
     def courses(self, obj):
         """

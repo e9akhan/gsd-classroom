@@ -1,0 +1,25 @@
+{% extends 'voyage/base.html' %}
+
+{% block links %}
+<li class="nav-item">
+    <a class="nav-link" aria-current="page" href="{% url 'faculty_dashboard' id=2 %}">Dashboard</a>
+</li>
+<a href="{% url 'new_course' %}" class="btn btn-dark m-1">Add Course</a>
+<a href="{% url 'new_assignment' %}" class="btn btn-dark m-1">Add Assignment</a>
+{% endblock %}
+
+{% block header %}
+
+<strong style="width: 25%">Course Name</strong>
+<span class="text-end">Students</span>
+<span class="text-end">Assignments</span>
+
+{% endblock %}
+
+{% block list %}
+
+<strong style="width: 25%">{{object.name}}</strong>
+<span class="text-end">{{object.students|length}}</span>
+<span class="text-end">{{object.assignments|length}}</span>
+
+{% endblock %}

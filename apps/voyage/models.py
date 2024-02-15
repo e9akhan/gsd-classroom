@@ -4,6 +4,7 @@
 
 import random
 from datetime import datetime, timedelta
+import git
 
 from django.contrib.auth import get_user_model
 from django.db import models
@@ -31,6 +32,7 @@ class Faculty(QuxModel):
         """
         return Assignment.objects.filter(content__faculty=self)
 
+    @property
     def courses(self):
         """
         courses.
@@ -187,6 +189,7 @@ class Course(QuxModel):
         """
         return Program.objects.filter(assignment__course=self).distinct()
 
+    @property
     def students(self):
         """
         Students.
@@ -199,6 +202,7 @@ class Course(QuxModel):
         """
         return Content.objects.filter(assignment__course=self).distinct()
 
+    @property
     def assignments(self):
         """
         No of assignments.
@@ -297,12 +301,14 @@ class Student(QuxModel):
         """
         return self.program
 
+    @property
     def courses(self):
         """
         Number of courses.
         """
         return Course.objects.filter(assignment__program__student=self).distinct()
 
+    @property
     def assignments(self):
         """
         No of assignments.
@@ -444,7 +450,7 @@ class Assignment(QuxModel):
         """
         Return a queryset of submissions that are either all, graded, or not graded.
         """
-        query = self.studentassignment_set.all()
+        query = self.studentassignment_set.all().exclude(submitted=None)
         if graded:
             return query.exclude(grade=None)
 
@@ -463,6 +469,7 @@ class Assignment(QuxModel):
         )
         return total_assignments == query.count()
 
+    @property
     def assignment_avg_grade(self):
         """
         Average assignment grade.
@@ -470,6 +477,20 @@ class Assignment(QuxModel):
         stu_assignments = self.studentassignment_set.all().exclude(grade=None)
         marks = stu_assignments.aggregate(models.Avg("grade"))["grade__avg"]
         return round(marks, 2) if marks else 0
+
+    def clone_repo_for_student(self, course_repo_url, student_username):
+        repo = git.Repo.clone_from(
+            course_repo_url, f"https://github.com/{student_username}/{self.content.name}"
+        )
+        return repo
+
+    def save(self, **kwargs):
+        students = Student.objects.all()
+
+        for student in students:
+            self.clone_repo_for_student(self.content.repo, student.user.username)
+
+        return super().save(**kwargs)
 
     @classmethod
     def create_random_assignments(cls):
@@ -535,3 +556,6 @@ class StudentAssignment(QuxModel):
             student_assignments.append(student_assignment)
 
         cls.objects.bulk_create(student_assignments)
+
+    def __str__(self):
+        return f"{self.assignment}"
