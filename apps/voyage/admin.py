@@ -4,7 +4,6 @@
 
 from django.contrib import admin
 from django.utils.html import format_html
-from django.urls import reverse
 
 from .models import (
     Faculty,
@@ -35,61 +34,38 @@ class FacultyAdmin(admin.ModelAdmin):
         """
         Assignments.
         """
-        url = "admin:voyage_assignment_change"
         assignments = obj.assignments()
-        dropdown = "<ul>"
-
-        for assignment in assignments:
-            dropdown += f"""
-            <li>
-                <a href={reverse(url, kwargs={'object_id': assignment.id})}>
-                    {assignment}
-                </a>
-            </li>
-        """
-
-        dropdown += "</ul>"
-        return format_html(dropdown)
+        if assignments:
+            html = '<a href="/admin/voyage/assignment/?id__in='
+            for assignment in assignments:
+                html = "".join((html, f"{assignment.id},"))
+            return format_html(html[:-1] + f'">{len(assignments)}</a>')
+        return 0
 
     def assignments_graded(self, obj):
         """
         Assignments graded.
         """
-        url = "admin:voyage_studentassignment_change"
         assignments = obj.assignments_graded()
-        dropdown = "<ul>"
-
-        for assignment in assignments:
-            dropdown += f"""
-            <li>
-                <a href={reverse(url, kwargs={'object_id': assignment.id})}>
-                    {assignment}
-                </a>
-            </li>
-        """
-
-        dropdown += "</ul>"
-        return format_html(dropdown)
+        if assignments:
+            html = '<a href="/admin/voyage/studentassignment/?id__in='
+            for assignment in assignments:
+                html = "".join((html, f"{assignment.id},"))
+            return format_html(html[:-1] + f'">{len(assignments)}</a>')
+        return 0
 
     def courses(self, obj):
         """
         Courses.
         """
-        url = "admin:voyage_course_change"
         courses = obj.courses()
-        dropdown = "<ul>"
 
-        for course in courses:
-            dropdown += f"""
-            <li>
-                <a href={reverse(url, kwargs={'object_id': course.id})}>
-                    {course}
-                </a>
-            </li>
-        """
-
-        dropdown += "</ul>"
-        return format_html(dropdown)
+        if courses:
+            html = '<a href="/admin/voyage/course/?id__in='
+            for course in courses:
+                html = "".join((html, f"{course.id},"))
+            return format_html(html[:-1] + f'">{len(courses)}</a>')
+        return 0
 
 
 @admin.register(Student)
@@ -111,55 +87,35 @@ class StudentAdmin(admin.ModelAdmin):
         """
         Programs
         """
-        url = "admin:voyage_program_change"
         program = obj.programs()
-        return format_html(
-            f"""
-                <a href={reverse(url, kwargs={'object_id': program.id})}>
-                    {program.name} 
-                </a>
-            """
-        )
+        if program:
+            html = f'<a href="/admin/voyage/program/{program.id}/change/'
+            return format_html(html[:-1] + f'">{program}</a>')
+        return 0
 
     def courses(self, obj):
         """
         Courses.
         """
-        url = "admin:voyage_course_change"
         courses = obj.courses()
-
-        dropdown = "<ul>"
-        for course in courses:
-            dropdown += f"""
-            <li>
-                <a href={reverse(url, kwargs={"object_id": course.id})}>
-                    {course}
-                </a>
-            </li>
-        """
-        dropdown += "</ul>"
-
-        return format_html(dropdown)
+        if courses:
+            html = '<a href="/admin/voyage/course/?id__in='
+            for course in courses:
+                html = "".join((html, f"{course.id},"))
+            return format_html(html[:-1] + f'">{len(courses)}</a>')
+        return 0
 
     def assignments(self, obj):
         """
         assignments.
         """
-        url = "admin:voyage_studentassignment_change"
         assignments = obj.assignments()
-
-        dropdown = "<ul>"
-        for assignment in assignments:
-            dropdown += f"""
-            <li>
-                <a href={reverse(url, kwargs={'object_id': assignment.id})}>
-                    {assignment}
-                </a>
-            </li>
-            """
-        dropdown += "</ul>"
-
-        return format_html(dropdown)
+        if assignments:
+            html = '<a href="/admin/voyage/studentassignment/?id__in='
+            for assignment in assignments:
+                html = "".join((html, f"{assignment.id},"))
+            return format_html(html[:-1] + f'">{len(assignments)}</a>')
+        return 0
 
     def grade(self, obj):
         """
@@ -171,21 +127,13 @@ class StudentAdmin(admin.ModelAdmin):
         """
         No of assignments submitted.
         """
-        url = "admin:voyage_studentassignment_change"
         assignments = obj.assignments_submitted()
-
-        dropdown = "<ul>"
-        for assignment in assignments:
-            dropdown += f"""
-            <li>
-                <a href={reverse(url, kwargs={"object_id": assignment.id})}>
-                    {assignment}
-                </a>
-            </li>
-        """
-        dropdown += "</ul>"
-
-        return format_html(dropdown)
+        if assignments:
+            html = '<a href="/admin/voyage/studentassignment/?id__in='
+            for assignment in assignments:
+                html = "".join((html, f"{assignment.id},"))
+            return format_html(html[:-1] + f'">{len(assignments)}</a>')
+        return 0
 
 
 @admin.register(Content)
@@ -194,19 +142,39 @@ class ContentAdmin(admin.ModelAdmin):
     Content Admin class.
     """
 
-    list_display = ["name", "faculty", "repo", "no_of_courses", "assignments"]
+    list_display = ["name", "facultys", "repo", "no_of_courses", "assignments"]
+
+    def facultys(self, obj):
+        """
+        Faculty.
+        """
+        faculty = obj.faculty
+        html = f'<a href="/admin/voyage/faculty/{faculty.id}/change/">{faculty}</a>'
+        return format_html(html)
 
     def assignments(self, obj):
         """
         Assignments.
         """
-        return obj.assignments().count()
+        assignments = obj.assignments()
+        if assignments:
+            html = '<a href="/admin/voyage/assignment/?id__in='
+            for assignment in assignments:
+                html = "".join((html, f"{assignment.id},"))
+            return format_html(html[:-1] + f'">{len(assignments)}</a>')
+        return 0
 
     def no_of_courses(self, obj):
         """
         No of courses.
         """
-        return obj.courses().count()
+        courses = obj.courses()
+        if courses:
+            html = '<a href="/admin/voyage/course/?id__in='
+            for course in courses:
+                html = "".join((html, f"{course.id},"))
+            return format_html(html[:-1] + f'">{len(courses)}</a>')
+        return 0
 
 
 @admin.register(Program)
@@ -221,13 +189,25 @@ class ProgramAdmin(admin.ModelAdmin):
         """
         No of courses.
         """
-        return obj.courses().count()
+        courses = obj.courses()
+        if courses:
+            html = '<a href="/admin/voyage/course/?id__in='
+            for course in courses:
+                html = "".join((html, f"{course.id},"))
+            return format_html(html[:-1] + f'">{len(courses)}</a>')
+        return 0
 
     def no_of_students(self, obj):
         """
         No of students.
         """
-        return obj.students().count()
+        students = obj.students()
+        if students:
+            html = '<a href="/admin/voyage/student/?id__in='
+            for student in students:
+                html = "".join((html, f"{student.id},"))
+            return format_html(html[:-1] + f'">{len(students)}</a>')
+        return 0
 
 
 @admin.register(Course)
@@ -242,13 +222,25 @@ class CourseAdmin(admin.ModelAdmin):
         """
         Assignment.
         """
-        return obj.assignments().count()
+        assignments = obj.assignments()
+        if assignments:
+            html = '<a href="/admin/voyage/assignment/?id__in='
+            for assignment in assignments:
+                html = "".join((html, f"{assignment.id},"))
+            return format_html(html[:-1] + f'">{len(assignments)}</a>')
+        return 0
 
     def assignment_full_checked(self, obj):
         """
         All assignment checked.
         """
-        return len(obj.assignment_completed_and_graded_100())
+        assignments = obj.assignment_completed_and_graded_100()
+        if assignments:
+            html = '<a href="/admin/voyage/assignment/?id__in='
+            for assignment in assignments:
+                html = "".join((html, f"{assignment.id},"))
+            return format_html(html[:-1] + f'">{len(assignments)}</a>')
+        return 0
 
 
 @admin.register(Assignment)
@@ -257,13 +249,29 @@ class AssignmentAdmin(admin.ModelAdmin):
     Assignment Admin class.
     """
 
-    list_display = ["program", "course", "content", "due", "average"]
+    list_display = ["program", "courses", "contents", "due", "average"]
 
     def average(self, obj):
         """
         Average.
         """
         return obj.assignment_avg_grade()
+
+    def courses(self, obj):
+        """
+        Courses.
+        """
+        course = obj.course
+        html = f'<a href="/admin/voyage/course/{course.id}/change/">{course}</a>'
+        return format_html(html)
+
+    def contents(self, obj):
+        """
+        Contents.
+        """
+        content = obj.content
+        html = f'<a href="/admin/voyage/content/{content.id}/change/">{content}</a>'
+        return format_html(html)
 
 
 @admin.register(StudentAssignment)
@@ -272,4 +280,20 @@ class StudentAssignmentAdmin(admin.ModelAdmin):
     Student Assignment Admin class.
     """
 
-    list_display = ["student", "assignment", "reviewer", "grade", "submitted"]
+    list_display = ["student", "assignments", "reviewers", "grade", "submitted"]
+
+    def reviewers(self, obj):
+        """
+        Reviewer.
+        """
+        reviewer = obj.reviewer
+        html = f'<a href="/admin/voyage/faculty/{reviewer.id}/change/">{reviewer}</a>'
+        return format_html(html)
+
+    def assignments(self, obj):
+        """
+        Assignment.
+        """
+        assignment = obj.assignment
+        html = f'<a href="/admin/voyage/assignment/{assignment.id}/change/">{assignment}</a>'
+        return format_html(html)
